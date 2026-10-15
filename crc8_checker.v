@@ -1,5 +1,22 @@
+// crc8_checker.v
+//
 // The CRC checker/verifier module - the module that actually produces
-// the "is this record intact or corrupted?"
+// the "is this record intact or corrupted?" result your detection-rate
+// results depend on.
+//
+// Unlike crc8_generator.v (which computes a CRC to ATTACH to outgoing
+// data), this module takes a FULL 72-bit record (64-bit data + the
+// 8-bit CRC already attached to it) and re-divides the WHOLE thing by
+// the same generator polynomial. This is the same method already
+// validated in the Python notebook: if the record is intact, dividing
+// the full record by the polynomial always leaves a remainder of
+// exactly zero; if even a single bit has changed, the remainder will
+// (almost always) be non-zero.
+//
+// This reuses the exact same shift-and-XOR mechanism as crc8_generator.v,
+// just run for 72 cycles (the whole record) instead of 64, and checking
+// the FINAL remainder instead of outputting it as a new CRC.
+
 module crc8_checker (
     input  wire        clk,
     input  wire        rst_n,        // active-low reset

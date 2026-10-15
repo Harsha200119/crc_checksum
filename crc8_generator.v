@@ -1,3 +1,24 @@
+// crc8_generator.v
+//
+// The FIRST REAL module of the data integrity engine.
+// Computes an 8-bit CRC over a 64-bit data word, using the project's
+// chosen generator polynomial: x^8+x^7+x^4+x^2+x+1 (Koopman notation 0x97),
+// selected per Koopman & Chakravarty (2004) for its HD=4 property up to
+// 119-bit data words.
+//
+// This is exactly the "shift register with XOR feedback" mechanism from
+// the xor_shift_demo.v exercise (Week 2), scaled up from 4 bits to 8 bits,
+// with the toy TAPS value replaced by the real polynomial, and driven by
+// an FSM (the same pattern as fsm_demo.v) instead of a testbench manually
+// stepping through bits.
+//
+// How it works, one data bit at a time (MSB first):
+//   1. Look at the CRC register's top bit (crc_reg[7])
+//   2. XOR it with the incoming data bit -> "feedback"
+//   3. Shift the CRC register left by one
+//   4. If feedback was 1, XOR the whole register with POLY
+//   5. Repeat for all 64 bits of the data word
+
 module crc8_generator (
     input  wire        clk,
     input  wire        rst_n,      // active-low reset
@@ -48,7 +69,9 @@ module crc8_generator (
 
                 SHIFT: begin
                     // Shift the CRC register left, bringing in nothing new
-   
+                    // (data enters only through the feedback XOR), then
+                    // conditionally XOR with POLY - same mechanism as
+                    // xor_shift_demo.v, just at 8 bits with the real polynomial.
                     if (feedback)
                         crc_reg <= {crc_reg[6:0], 1'b0} ^ POLY;
                     else
